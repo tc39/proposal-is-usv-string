@@ -21,6 +21,36 @@ The proposal is to define in ECMA-262 a static `String` method to verify if a gi
 
 As a highly common scenario for interfaces between WebIDL and Wasm, this should ease certain integration scenarios that can then decide to throw or run a conversion as necessary, without having to incur custom conversion code from the start.
 
+## Algorithm
+
+The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates
+or invalid surrogate prefix codes.
+
+The equivalent algorithm in JavaScript is likely something along the lines of:
+
+```js
+let i = 0;
+while (i < str.length) {
+  const surrogatePrefix = str.charCodeAt(i) & 0xFC00;
+  // Non-surrogate code point, single increment
+  if (surrogatePrefix < 0xD800) {
+    i += 1;
+  }
+  // Surrogate start
+  else if (surrogatePrefix === 0xD800) {
+    // Validate surrogate pair, double increment
+    if ((decoded.charCodeAt(i + 1) & 0xFC00) !== 0xDC00)
+      return false;
+    i += 2;
+  }
+  else {
+    // Out-of-range surrogate prefix (above 0xD800)
+    return false;
+  }
+}
+return true;
+```
+
 ## FAQs
 
 ### Isn't this possible today without needing a builtin API?
