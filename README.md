@@ -1,60 +1,42 @@
-# template-for-proposals
+# String is USV String
 
-A repository template for ECMAScript proposals.
+Champions: Guy Bedford
+Author: Guy Bedford
 
-## Before creating a proposal
+Status: draft
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to "champion" your proposal
+## Problem Statement
 
-## Create your proposal repo
+ECMAScript strings permit unpaired UTF-16 surrogates, in contrast to many UTF implementations.
 
-Follow these steps:
-  1.  Click the green ["use this template"](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1.  Go to your repo settings “Options” page, under “GitHub Pages”, and set the source to the **main branch** under the root (and click Save, if it does not autosave this setting)
-      1. check "Enforce HTTPS"
-      1. On "Options", under "Features", Ensure "Issues" is checked, and disable "Wiki", and "Projects" (unless you intend to use Projects)
-      1. Under "Merge button", check "automatically delete head branches"
-<!--
-  1.  Avoid merge conflicts with build process output files by running:
-      ```sh
-      git config --local --add merge.output.driver true
-      git config --local --add merge.output.driver true
-      ```
-  1.  Add a post-rewrite git hook to auto-rebuild the output on every commit:
-      ```sh
-      cp hooks/post-rewrite .git/hooks/post-rewrite
-      chmod +x .git/hooks/post-rewrite
-      ```
--->
-  3.  ["How to write a good explainer"][explainer] explains how to make a good first impression.
+On the other hand, WebIDL defines [USVString](https://heycam.github.io/webidl/#idl-USVString) as lists of Unicode Scalar Values, which includes only the allowed UTF code point ranges [0, 0xD7FF] or [0xE000, 0x10FFFF], explicitly excluding unpaired surrogate values.
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+In addition, the Web Assembly [Interface Types]() proposal also restricts string values to lists of Unicode Scalar Values, [as polled in a recent CG meeting](https://github.com/WebAssembly/meetings/blob/main/main/2021/CG-08-03.md).
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+Since the interfacing of JavaScript strings with platform and Web Assembly APIs is a highly common use case, there is a regular need for string validations both within the platform and for certain userland use case scenarios.
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/HEAD/spec.emu).
-      ```
+## Proposal
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is "tc39"
-      and *PROJECT* is "template-for-proposals".
+The proposal is to define in ECMA-262 a static `String` method to verify if a given ECMAScript string is a valid USV String or not.
 
+As a highly common scenario for interfaces between WebIDL and Wasm, this should ease certain integration scenarios that can then decide to throw or run a conversion as necessary, without having to incur custom conversion code from the start.
 
-## Maintain your proposal repo
+## FAQs
 
-  1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it ".html")
-  1. Any commit that makes meaningful changes to the spec, should run `npm run build` and commit the resulting output.
-  1. Whenever you update `ecmarkup`, run `npm run build` and commit any changes that come from that dependency.
+### Isn't this possible today without needing a builtin API?
 
-  [explainer]: https://github.com/tc39/how-we-work/blob/HEAD/explainer.md
+The two major use cases are for integration with other specifications and for userland code that for example interfaces with Web Assembly.
+
+For users, it avoids having to write custom validators when dealing with string input in various forms, providing instead a full correct platform API that can allow easily determining the USV guarantee / invariant to apply for subsequent processing.
+
+For integration with other platform specifications, having the ability to reference an ECMA-262 specification method for validation could also make integration easier where many APIs are now unifying on USV strings as a standard. For example, [such a method came up as a need for integration with the TextEncoder API previously](https://github.com/whatwg/encoding/issues/174) that a specification like this would be able to assist with.
+
+### Why is the proposal to add a static String method?
+
+Making it a static method on `String` seems like the safest home for such a method. Adding custom methods to `String.prototype` is likely quite risky, but could be considered as well.
+
+### Are the primary benefits performance?
+
+While the proposal is not entirely for performance reasons, it should hopefully still enable a builtin method that could be faster than user validation.
+
+In future it might even be possible for a bit state to be associated with string data types and maintained through string functions to make the check entirely zero cost, but that would be entirely up to implementations and not anything within the reach of this specification.
