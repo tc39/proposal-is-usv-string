@@ -13,7 +13,7 @@ In contrast, WebIDL also defines the [USVString](https://heycam.github.io/webidl
 
 The WebAssembly [Interface Types](https://github.com/WebAssembly/interface-types) proposal also restricts string values to lists of Unicode Scalar Values, [as polled in a recent CG meeting](https://github.com/WebAssembly/meetings/blob/main/main/2021/CG-08-03.md).
 
-Since interfacing JavaScript strings with platform and WebAssembly APIs is a highly common use case and because conversion from `DOMString` to `USVString` is lossy (common options are to replace unpaired surrogates or to throw an error), there is a regular need for string validation both within the platform and for certain userland use case scenarios.
+Interfacing JavaScript strings with platform and WebAssembly APIs is a common use case that therefore suffers from conversion issues. In particular because conversion from `DOMString` to `USVString` is lossy (common options are to replace unpaired surrogates or to throw an error) there is a regular need for string validation both within the platform and for certain userland use case scenarios.
 
 ## Proposal
 
