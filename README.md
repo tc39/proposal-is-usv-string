@@ -23,10 +23,15 @@ As a highly common scenario for interfaces between WebIDL and Wasm, this should 
 
 ## Algorithm
 
-The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates
-or invalid surrogate prefix codes.
+The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates or invalid surrogate prefix codes.
 
-The equivalent algorithm in JavaScript is likely something along the lines of:
+In JavaScript this can be achieved with the regular expression test:
+
+```js
+!/\p{Surrogate}/u.test(str);
+```
+
+Or more explicitly an algorithm along the lines of:
 
 ```js
 let i = 0;
@@ -39,7 +44,7 @@ while (i < str.length) {
   // Surrogate start
   else if (surrogatePrefix === 0xD800) {
     // Validate surrogate pair, double increment
-    if ((decoded.charCodeAt(i + 1) & 0xFC00) !== 0xDC00)
+    if ((str.charCodeAt(i + 1) & 0xFC00) !== 0xDC00)
       return false;
     i += 2;
   }
