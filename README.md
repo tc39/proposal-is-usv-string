@@ -23,7 +23,7 @@ As a highly common scenario for interfaces between WebIDL and Wasm, this should 
 
 ## Algorithm
 
-The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates or invalid surrogate prefix codes.
+The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates.
 
 In JavaScript this can be achieved with the regular expression test:
 
