@@ -31,21 +31,21 @@ The equivalent algorithm in JavaScript is likely something along the lines of:
 ```js
 let i = 0;
 while (i < str.length) {
-  const surrogatePrefix = str.charCodeAt(i) & 0xFC00;
-  // Non-surrogate code point, single increment
-  if (surrogatePrefix < 0xD800) {
+  const isSurrogate = (str.charCodeAt(i) & 0xF800) == 0xD800;
+  if (!isSurrogate) {
     i += 1;
-  }
-  // Surrogate start
-  else if (surrogatePrefix === 0xD800) {
-    // Validate surrogate pair, double increment
-    if ((decoded.charCodeAt(i + 1) & 0xFC00) !== 0xDC00)
-      return false;
-    i += 2;
-  }
-  else {
-    // Out-of-range surrogate prefix (above 0xD800)
-    return false;
+  } else {
+    const isHighSurrogate = str.charCodeAt(i) < 0xDC00;
+    if (isHighSurrogate) {
+      const isFollowedByLowSurrogate = i + 1 < str.length && (str.charCodeAt(i + 1) & 0xFC00) == 0xDC00;
+      if (isFollowedByLowSurrogate) {
+        i += 2;
+      } else {
+        return false; // unpaired high surrogate
+      }
+    } else {
+      return false; // unpaired low surrogate
+    }
   }
 }
 return true;
