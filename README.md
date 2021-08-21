@@ -36,21 +36,21 @@ Or more explicitly an algorithm along the lines of:
 ```js
 let i = 0;
 while (i < str.length) {
-  const surrogatePrefix = str.charCodeAt(i) & 0xFC00;
-  // Non-surrogate code point, single increment
-  if (surrogatePrefix < 0xD800) {
+  const isSurrogate = (str.charCodeAt(i) & 0xF800) == 0xD800;
+  if (!isSurrogate) {
     i += 1;
-  }
-  // Surrogate start
-  else if (surrogatePrefix === 0xD800) {
-    // Validate surrogate pair, double increment
-    if ((str.charCodeAt(i + 1) & 0xFC00) !== 0xDC00)
-      return false;
-    i += 2;
-  }
-  else {
-    // Out-of-range surrogate prefix (above 0xD800)
-    return false;
+  } else {
+    const isHighSurrogate = str.charCodeAt(i) < 0xDC00;
+    if (isHighSurrogate) {
+      const isFollowedByLowSurrogate = i + 1 < str.length && (str.charCodeAt(i + 1) & 0xFC00) == 0xDC00;
+      if (isFollowedByLowSurrogate) {
+        i += 2;
+      } else {
+        return false; // unpaired high surrogate
+      }
+    } else {
+      return false; // unpaired low surrogate
+    }
   }
 }
 return true;
@@ -70,8 +70,6 @@ For integration with other platform specifications, having the ability to refere
 
 Making it a static method on `String` seems like the safest home for such a method. Adding custom methods to `String.prototype` is likely quite risky, but could be considered as well.
 
-### Are the primary benefits performance?
+### What about performance?
 
-While the proposal is not entirely for performance reasons, it should hopefully still enable a builtin method that could be faster than user validation.
-
-In future it might even be possible for a bit state to be associated with string data types and maintained through string functions to make the check entirely zero cost, but that would be entirely up to implementations and not anything within the reach of this specification.
+Performance optimizations are up to implementations and are not the primary motivation for this specification, yet enabling a builtin method that is faster than validation in userland is desirable. Perhaps well-formedness state could be cached per string and propagated through string operations to avoid the need for a linear scan where possible, say where strings are already lists of Unicode Scalar Values, while propagating state in operations involving strings containing inner unpaired surrogates will likely still require (re)scans.
