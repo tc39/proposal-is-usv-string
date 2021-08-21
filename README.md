@@ -7,13 +7,13 @@ Status: draft
 
 ## Problem Statement
 
-ECMAScript strings permit unpaired UTF-16 surrogates, in contrast to many UTF implementations.
+[ECMAScript string values](https://262.ecma-international.org/12.0/#sec-terms-and-definitions-string-value) are a finite ordered sequence of zero or more 16-bit unsigned integer values, where each integer value in the sequence usually represents a single 16-bit code unit of UTF-16 text. However, ECMAScript does not place any restrictions or requirements on the integer values except that they must be 16-bit unsigned integers, hence ill-formed sequences containing unpaired surrogate code units are permitted during construction and string processing. In WebIDL, this concept maps to the [DOMString](https://heycam.github.io/webidl/#idl-DOMString) type.
 
-On the other hand, WebIDL defines [USVString](https://heycam.github.io/webidl/#idl-USVString) as lists of Unicode Scalar Values, which includes only the allowed UTF code point ranges [0, 0xD7FF] or [0xE000, 0x10FFFF], explicitly excluding unpaired surrogate values.
+In contrast, WebIDL also defines the [USVString](https://heycam.github.io/webidl/#idl-USVString) type as the set of all possible sequences of [Unicode Scalar Values](http://www.unicode.org/glossary/#unicode_scalar_value), which are all of the Unicode code points apart from the surrogate code points, representing well-formed Unicode text as typically consumed by for example file system and networking APIs.
 
-In addition, the Web Assembly [Interface Types]() proposal also restricts string values to lists of Unicode Scalar Values, [as polled in a recent CG meeting](https://github.com/WebAssembly/meetings/blob/main/main/2021/CG-08-03.md).
+In addition, the WebAssembly [Interface Types](https://github.com/WebAssembly/interface-types) proposal also restricts string values to lists of Unicode Scalar Values, [as polled in a recent CG meeting](https://github.com/WebAssembly/meetings/blob/main/main/2021/CG-08-03.md).
 
-Since the interfacing of JavaScript strings with platform and Web Assembly APIs is a highly common use case, there is a regular need for string validations both within the platform and for certain userland use case scenarios.
+Since interfacing JavaScript strings with platform and WebAssembly APIs is a highly common use case and because conversion from `DOMString` to `USVString` is lossy (common options are to replace unpaired surrogates or to throw an error), there is a regular need for string validation both within the platform and for certain userland use case scenarios.
 
 ## Proposal
 
