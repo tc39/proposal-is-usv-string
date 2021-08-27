@@ -55,6 +55,12 @@ while (i < str.length) {
 return true;
 ```
 
+## Prior Art
+
+* WebIDL [USVString](https://heycam.github.io/webidl/#idl-USVString)
+* Lone surrogate handling [discussion on WhatWG/encoding](https://github.com/whatwg/encoding/issues/174)
+* Node.js [`util.toUSVString`](https://nodejs.org/dist/latest-v16.x/docs/api/util.html#util_util_tousvstring_string)
+
 ## FAQs
 
 ### Isn't this possible today without needing a builtin API?
