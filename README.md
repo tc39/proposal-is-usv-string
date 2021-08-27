@@ -1,7 +1,6 @@
 # String is USV String
 
-Champions: Guy Bedford
-Author: Guy Bedford
+Champions: Guy Bedford, Bradley Farias
 
 Status: draft
 
