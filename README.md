@@ -1,24 +1,20 @@
-# String is USV String
+# Well-Formed Unicode Strings
 
-Champions: Guy Bedford, Bradley Farias
+Champions: Guy Bedford, Bradley Farias, Michael Ficarra
 
-Status: draft
+Status: stage 1
 
 ## Problem Statement
 
-[ECMAScript string values](https://262.ecma-international.org/12.0/#sec-terms-and-definitions-string-value) are a finite ordered sequence of zero or more 16-bit unsigned integer values, where each integer value in the sequence usually represents a single 16-bit code unit of UTF-16 text. However, ECMAScript does not place any restrictions or requirements on the integer values except that they must be 16-bit unsigned integers, hence ill-formed 16-bit code unit sequences containing unpaired surrogate code units (`0xD800..0xDFFF` not part of a high surrogate `0xD800..0xDBFF` followed by a low surrogate `0xDC00..0xDFFF`) are permitted during construction and string processing. In WebIDL, this concept maps to the [DOMString](https://heycam.github.io/webidl/#idl-DOMString) type.
+[ECMAScript string values](https://tc39.es/ecma262/multipage/overview.html#sec-terms-and-definitions-string-value) are a finite ordered sequence of zero or more 16-bit unsigned integer values. However, ECMAScript does not place any restrictions or requirements on the integer values except that they must be 16-bit unsigned integers. In *well-formed* strings, each integer value in the sequence represents a single 16-bit code unit of UTF-16-encoded Unicode text. However, not all sequences of UTF-16 code units represent UTF-16-encoded Unicode text. In well-formed strings, code units in the range `0xD800..0xDBFF` (leading surrogates) and `0xDC00..0xDFFF` (trailing surrogates) must appear paired and in order. Strings with unpaired or out-of-order surrogates are *ill-formed*.
 
-In contrast, WebIDL also defines the [Unicode Scalar Value](http://www.unicode.org/glossary/#unicode_scalar_value) (USV) string type [USVString](https://heycam.github.io/webidl/#idl-USVString) as the set of all possible sequences of Unicode Scalar Values, which are all of the Unicode code points apart from the surrogate code points (`U+0000..U+D7FF ∧ U+E000..U+10FFFF` where surrogate *pairs* map to `U+10000..U+10FFFF`), representing well-formed Unicode text as typically consumed by for example file system and networking APIs.
+In WebIDL, possibly-ill-formed Strings are referred to using the [DOMString](https://webidl.spec.whatwg.org/#idl-DOMString) type. But for interfaces which operate on Unicode text, WebIDL also defines the [USVString](https://webidl.spec.whatwg.org/#idl-USVString) type as the set of all possible sequences of Unicode Scalar Values, which are all of the Unicode code points apart from the surrogate code points (`U+0000..U+D7FF` and `U+E000..U+10FFFF`), representing Unicode text.
 
-The WebAssembly [Interface Types](https://github.com/WebAssembly/interface-types) proposal also restricts string values to lists of Unicode Scalar Values, [as polled in a recent CG meeting](https://github.com/WebAssembly/meetings/blob/main/main/2021/CG-08-03.md).
-
-Interfacing JavaScript strings with platform and WebAssembly APIs is a common use case that therefore suffers from conversion issues. In particular because conversion from `DOMString` to `USVString` is lossy (common options are to replace unpaired surrogates or to throw an error) there is a regular need for string validation both within the platform and for certain userland use case scenarios.
+The WebAssembly [Component Model](https://github.com/WebAssembly/component-model) requires well-formed strings, as do some compile-to-JS programming languages, many data encodings, network interfaces, filesystem interfaces, etc. Interfacing JavaScript strings with such APIs is a common use case that therefore suffers from conversion burdens. In particular because conversion from `DOMString` to `USVString` is lossy (common options are to replace unpaired surrogates or to throw an error) there is a regular need for string validation both within the platform and for certain userland use case scenarios.
 
 ## Proposal
 
-The proposal is to define in ECMA-262 a static `String` method to verify if a given ECMAScript string is a valid USV String or not.
-
-As a highly common scenario for interfaces between WebIDL and Wasm, this should ease certain integration scenarios that can then decide to throw or run a conversion as necessary, without having to incur custom conversion code from the start.
+The proposal is to define in ECMA-262 a method to verify if a given ECMAScript string is well-formed or not. As a highly common scenario for interfaces between JavaScript/web APIs and those that operate on Unicode text, this test should be as efficient as possible, ideally scaling independently from the length of the string.
 
 ## Algorithm
 
@@ -30,30 +26,30 @@ In JavaScript this can be achieved with the regular expression test:
 !/\p{Surrogate}/u.test(str);
 ```
 
-Or more explicitly an algorithm along the lines of:
+Or more explicitly using an algorithm along the lines of:
 
 ```js
-let i = 0;
-while (i < str.length) {
-  const isSurrogate = (str.charCodeAt(i) & 0xF800) == 0xD800;
-  if (!isSurrogate) {
-    i += 1;
-  } else {
-    const isHighSurrogate = str.charCodeAt(i) < 0xDC00;
-    if (isHighSurrogate) {
-      const isFollowedByLowSurrogate = i + 1 < str.length && (str.charCodeAt(i + 1) & 0xFC00) == 0xDC00;
-      if (isFollowedByLowSurrogate) {
-        i += 2;
-      } else {
-        return false; // unpaired high surrogate
-      }
-    } else {
-      return false; // unpaired low surrogate
+function isWellFormed(str) {
+  for (let i = 0; i < str.length; ++i) {
+    const isSurrogate = (str.charCodeAt(i) & 0xF800) == 0xD800;
+    if (!isSurrogate) {
+      continue;
     }
+    const isLeadingSurrogate = str.charCodeAt(i) < 0xDC00;
+    if (!isLeadingSurrogate) {
+      return false; // unpaired trailing surrogate
+    }
+    const isFollowedByTrailingSurrogate = i + 1 < str.length && (str.charCodeAt(i + 1) & 0xFC00) == 0xDC00;
+    if (!isFollowedByTrailingSurrogate) {
+      return false; // unpaired leading surrogate
+    }
+    ++i;
   }
+  return true;
 }
-return true;
 ```
+
+Unfortunately, these user-land implementations require iterating the entire string.
 
 ## Prior Art
 
@@ -65,16 +61,10 @@ return true;
 
 ### Isn't this possible today without needing a builtin API?
 
-The two major use cases are for integration with other specifications and for userland code that for example interfaces with Web Assembly.
+It is possible to answer the question, but it is not possible to do it in sub-linear time.
 
-For users, it avoids having to write custom validators when dealing with string input in various forms, providing instead a full correct platform API that can allow easily determining the USV guarantee / invariant to apply for subsequent processing.
+Performance optimizations are up to implementations and are not guaranteed by this specification, yet enabling a builtin method that is faster than validation in userland is desirable. Perhaps well-formedness state could be cached per string and propagated through string operations to avoid the need for a linear scan where possible, say where strings are already lists of Unicode Scalar Values, while propagating state in operations involving strings containing inner unpaired surrogates will likely still require (re)scans.
 
-For integration with other platform specifications, having the ability to reference an ECMA-262 specification method for validation could also make integration easier where many APIs are now unifying on USV strings as a standard. For example, [such a method came up as a need for integration with the TextEncoder API previously](https://github.com/whatwg/encoding/issues/174) that a specification like this would be able to assist with.
+### Are consumers going to do anything other than convert when they encounter ill-formed strings? If so, why not just provide a conversion method with a fast path for well-formed strings?
 
-### Why is the proposal to add a static String method?
-
-Making it a static method on `String` seems like the safest home for such a method. Adding custom methods to `String.prototype` is likely quite risky, but could be considered as well.
-
-### What about performance?
-
-Performance optimizations are up to implementations and are not the primary motivation for this specification, yet enabling a builtin method that is faster than validation in userland is desirable. Perhaps well-formedness state could be cached per string and propagated through string operations to avoid the need for a linear scan where possible, say where strings are already lists of Unicode Scalar Values, while propagating state in operations involving strings containing inner unpaired surrogates will likely still require (re)scans.
+Consumers may want to throw/error when encountering ill-formed strings. Also, consumers may want to defer the conversion or the error until later when the String is actually interpreted as Unicode text. These use cases justify the test-only method. Since it's easy to build a conversion method given the test-only method, the conversion method is omitted from this proposal at this time. See [#13](https://github.com/tc39/proposal-is-usv-string/issues/13) for discussion.
