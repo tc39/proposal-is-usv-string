@@ -1255,5 +1255,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let sdoMap = JSON.parse(`{}`);
-let biblio = JSON.parse(`{"refsByClause":{},"entries":[{"type":"clause","id":"sec-demo-clause","titleHTML":"This is an emu-clause","number":"1"}]}`);
+let biblio = JSON.parse(`{"refsByClause":{},"entries":[{"type":"clause","id":"sec-string.prototype.iswellformed","titleHTML":"String.prototype.isWellFormed ( )","number":"22.1.3.10"},{"type":"clause","id":"sec-properties-of-the-string-prototype-object","titleHTML":"Properties of the String Prototype Object","number":"22.1.3"}]}`);
 ;let usesMultipage = false
