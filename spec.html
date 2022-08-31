@@ -36,7 +36,7 @@ contributors: Guy Bedford, Bradley Farias, Michael Ficarra
       1. Repeat, while _k_ &lt; _strLen_,
         1. Let _cp_ be CodePointAt(_S_, _k_).
         1. If _cp_.[[IsUnpairedSurrogate]] is *true*, then
-          1. Append 0xFFFD (REPLACEMENT CHARACTER) to _result_.
+          1. Set _result_ to the string-concatenation of _result_ and 0xFFFD (REPLACEMENT CHARACTER).
         1. Else,
           1. Set _result_ to the string-concatenation of _result_ and UTF16EncodeCodePoint(_cp_.[[CodePoint]]).
         1. Set _k_ to _k_ + _cp_.[[CodeUnitCount]].
