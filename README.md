@@ -14,7 +14,7 @@ The WebAssembly [Component Model](https://github.com/WebAssembly/component-model
 
 ## Proposal
 
-The proposal is to define in ECMA-262 a method to verify if a given ECMAScript string is well-formed or not. As a highly common scenario for interfaces between JavaScript/web APIs and those that operate on Unicode text, this test should be as efficient as possible, ideally scaling independently from the length of the string.
+The proposal is to define in ECMA-262 a method to verify if a given ECMAScript string is well-formed or not. As a highly common scenario for interfaces between JavaScript/web APIs and those that operate on Unicode text, this test should be as efficient as possible, ideally scaling independently from the length of the string. In addition to improved performance, this method will also increase the clarity for readers of code where this test is being performed &mdash; especially those without extensive Unicode or regular expression knowledge.
 
 ## Algorithm
 
