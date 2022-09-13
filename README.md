@@ -2,7 +2,7 @@
 
 Champions: Guy Bedford, Bradley Farias, Michael Ficarra
 
-Status: stage 1
+Status: stage 2
 
 ## Problem Statement
 
