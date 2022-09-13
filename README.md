@@ -67,6 +67,6 @@ It is possible to answer the question, but it is not possible to do it in sub-li
 
 Performance optimizations are up to implementations and are not guaranteed by this specification, yet enabling a builtin method that is faster than validation in userland is desirable. Perhaps well-formedness state could be cached per string and propagated through string operations to avoid the need for a linear scan where possible, say where strings are already lists of Unicode Scalar Values, while propagating state in operations involving strings containing inner unpaired surrogates will likely still require (re)scans.
 
-### Are consumers going to do anything other than convert when they encounter ill-formed strings? If so, why not just provide a conversion method with a fast path for well-formed strings?
+### Are consumers going to do anything other than convert when they encounter ill-formed strings? If so, why not provide only a conversion method with a fast path for well-formed strings?
 
-Consumers may want to throw/error when encountering ill-formed strings. Also, consumers may want to defer the conversion or the error until later when the String is actually interpreted as Unicode text. These use cases justify the test-only method. Since it's easy to build a conversion method given the test-only method, the conversion method is omitted from this proposal at this time. See [#13](https://github.com/tc39/proposal-is-usv-string/issues/13) for discussion.
+Consumers may want to throw/error when encountering ill-formed strings. Also, consumers may want to defer the conversion or the error until later when the String is actually interpreted as Unicode text. These use cases justify the test-only method.
