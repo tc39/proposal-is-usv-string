@@ -16,6 +16,8 @@ The WebAssembly [Component Model](https://github.com/WebAssembly/component-model
 
 The proposal is to define in ECMA-262 a method to verify if a given ECMAScript string is well-formed or not. As a highly common scenario for interfaces between JavaScript/web APIs and those that operate on Unicode text, this test should be as efficient as possible, ideally scaling independently from the length of the string. In addition to improved performance, this method will also increase the clarity for readers of code where this test is being performed &mdash; especially those without extensive Unicode or regular expression knowledge.
 
+The proposal also adds a method to ensure that a String is well-formed by replacing any lone or out-of-order surrogates, if any are present, with U+FFFD (REPLACEMENT CHARACTER). This operation mimics the operation already performed within various web and non-ECMAScript APIs, and reduces the chance that a consumer who would otherwise have to write this method does so in an incompatible or incorrect way.
+
 ## Algorithm
 
 The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates.
