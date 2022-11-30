@@ -70,3 +70,7 @@ Performance optimizations are up to implementations and are not guaranteed by th
 ### Are consumers going to do anything other than convert when they encounter ill-formed strings? If so, why not provide only a conversion method with a fast path for well-formed strings?
 
 Consumers may want to throw/error when encountering ill-formed strings. Also, consumers may want to defer the conversion or the error until later when the String is actually interpreted as Unicode text. These use cases justify the test-only method.
+
+## Polyfills
+
+ - [string.prototype.iswellformed](https://npmjs.com/string.prototype.iswellformed) / [string.prototype.towellformed](https://npmjs.com/string.prototype.towellformed)
