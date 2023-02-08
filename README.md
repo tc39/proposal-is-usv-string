@@ -18,6 +18,8 @@ The proposal is to define in ECMA-262 a method to verify if a given ECMAScript s
 
 The proposal also adds a method to ensure that a String is well-formed by replacing any lone or out-of-order surrogates, if any are present, with U+FFFD (REPLACEMENT CHARACTER). This operation mimics the operation already performed within various web and non-ECMAScript APIs, and reduces the chance that a consumer who would otherwise have to write this method does so in an incompatible or incorrect way.
 
+These methods are `String.prototype.isWellFormed` and `String.prototype.toWellFormed`, usable for example as in `if (!someString.isWellFormed()) { someString = someString.toWellFormed(); }`.
+
 ## Algorithm
 
 The validation algorithm is effectively the standard UTF-16 validation algorithm, iterating through the string and pairing UTF-16 surrogates, failing validation for any unpaired surrogates.
