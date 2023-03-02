@@ -75,4 +75,5 @@ Consumers may want to throw/error when encountering ill-formed strings. Also, co
 
 ## Polyfills
 
+ - [core-js](https://github.com/zloirock/core-js#well-formed-unicode-strings)
  - [string.prototype.iswellformed](https://npmjs.com/string.prototype.iswellformed) / [string.prototype.towellformed](https://npmjs.com/string.prototype.towellformed)
